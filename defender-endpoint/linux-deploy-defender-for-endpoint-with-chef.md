@@ -159,7 +159,7 @@ A cookbook can be created through any of the following methods:
    bash 'Installing mdatp using mde-installer' do
        code <<-EOS
        chmod +x #{mde_installer}
-       #{mde_installer} --install --onboard #{onboarding_json} --custom-installation-path=\mount\installation_directory\
+       #{mde_installer} --install --onboard #{onboarding_json} --install-path=\mount\installation_directory\
        EOS
    end
    ```
