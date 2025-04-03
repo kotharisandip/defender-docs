@@ -122,53 +122,53 @@ A cookbook can be created through any of the following methods:
    end
    ```
 3. Use Local Repo: This is optional step of (2) above and it is applied for the ones who want to use local repo to get the installable package. By default this script will download the required package from https://packages.microsoft.com/. If one want to use local repo instead of this packages.microsoft.com, please ensure that local repo is configured properly and below details are placed in your existing package manager based on distro of the local machine. Below are the sample configuration needs to be added in the package manager configuration, which supposed to be modified based on the created local repo.  
-```powershell
-#Add Microsoft Defender
-case node['platform_family']
-when 'debian'
- apt_repository 'MDATPRepo' do
-   arch               'amd64'
-   cache_rebuild      true
-   cookbook           false
-   deb_src            false
-   key                'BC528686B50D79E339D3721CEB3E94ADBE1229CF'
-   keyserver          "keyserver.ubuntu.com"
-   distribution       'jammy'
-   repo_name          'microsoft-prod'
-   components         ['main']
-   uri                "https://packages.microsoft.com/ubuntu/22.04/prod"
- end
+   ```powershell
+   #Add Microsoft Defender
+   case node['platform_family']
+   when 'debian'
+   apt_repository 'MDATPRepo' do
+      arch               'amd64'
+      cache_rebuild      true
+      cookbook           false
+      deb_src            false
+      key                'BC528686B50D79E339D3721CEB3E94ADBE1229CF'
+      keyserver          "keyserver.ubuntu.com"
+      distribution       'jammy'
+      repo_name          'microsoft-prod'
+      components         ['main']
+      uri                "https://packages.microsoft.com/ubuntu/22.04/prod"
+   end
 
-when 'rhel'
- yum_repository 'microsoft-prod' do
-   baseurl            "https://packages.microsoft.com/rhel/7/prod/"
-   description        "Microsoft Defender for Endpoint"
-   enabled            true
-   gpgcheck           true
-   gpgkey             "https://packages.microsoft.com/keys/microsoft.asc"
- end
-end
+   when 'rhel'
+   yum_repository 'microsoft-prod' do
+      baseurl            "https://packages.microsoft.com/rhel/7/prod/"
+      description        "Microsoft Defender for Endpoint"
+      enabled            true
+      gpgcheck           true
+      gpgkey             "https://packages.microsoft.com/keys/microsoft.asc"
+   end
+   end
 
-#Create MDATP Directory
-mdatp = "/etc/opt/microsoft/mdatp"
-onboarding_json = "/tmp/mdatp_onboard.json"
+   #Create MDATP Directory
+   mdatp = "/etc/opt/microsoft/mdatp"
+   onboarding_json = "/tmp/mdatp_onboard.json"
 
-directory "#{mdatp}" do
-  owner 'root'
-  group 'root'
-  mode 0755
-  recursive true
-end
+   directory "#{mdatp}" do
+   owner 'root'
+   group 'root'
+   mode 0755
+   recursive true
+   end
 
-#Onboarding using tenant json 
-file "#{mdatp}/mdatp_onboard.json" do
-  content lazy { ::File.open(onboarding_json).read }
-  owner 'root'
-  group 'root'
-  mode '0644'
-  action :create_if_missing
-end
-```
+   #Onboarding using tenant json 
+   file "#{mdatp}/mdatp_onboard.json" do
+   content lazy { ::File.open(onboarding_json).read }
+   owner 'root'
+   group 'root'
+   mode '0644'
+   action :create_if_missing
+   end
+   ```
 
    ```bash
    mdatp = "/etc/opt/microsoft/mdatp"
