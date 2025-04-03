@@ -121,10 +121,99 @@ A cookbook can be created through any of the following methods:
        EOS
    end
    ```
+3. Use Local Repo: This is optional step of (2) above and it is applied for the ones who want to use local repo to get the installable package. By default this script will download the required package from https://packages.microsoft.com/. If one want to use local repo instead of this packages.microsoft.com, please ensure that local repo is configured properly and below details are placed in your existing package manager based on distro of the local machine. Below are the sample configuration needs to be added in the package manager configuration, which supposed to be modified based on the created local repo.  
+```powershell
+#Add Microsoft Defender
+case node['platform_family']
+when 'debian'
+ apt_repository 'MDATPRepo' do
+   arch               'amd64'
+   cache_rebuild      true
+   cookbook           false
+   deb_src            false
+   key                'BC528686B50D79E339D3721CEB3E94ADBE1229CF'
+   keyserver          "keyserver.ubuntu.com"
+   distribution       'jammy'
+   repo_name          'microsoft-prod'
+   components         ['main']
+   uri                "https://packages.microsoft.com/ubuntu/22.04/prod"
+ end
 
+when 'rhel'
+ yum_repository 'microsoft-prod' do
+   baseurl            "https://packages.microsoft.com/rhel/7/prod/"
+   description        "Microsoft Defender for Endpoint"
+   enabled            true
+   gpgcheck           true
+   gpgkey             "https://packages.microsoft.com/keys/microsoft.asc"
+ end
+end
+
+#Create MDATP Directory
+mdatp = "/etc/opt/microsoft/mdatp"
+onboarding_json = "/tmp/mdatp_onboard.json"
+
+directory "#{mdatp}" do
+  owner 'root'
+  group 'root'
+  mode 0755
+  recursive true
+end
+
+#Onboarding using tenant json 
+file "#{mdatp}/mdatp_onboard.json" do
+  content lazy { ::File.open(onboarding_json).read }
+  owner 'root'
+  group 'root'
+  mode '0644'
+  action :create_if_missing
+end
+```
+
+   ```bash
+   mdatp = "/etc/opt/microsoft/mdatp"
+
+   #Download the onboarding json from tenant, keep the same at specific location
+   onboarding_json = "/tmp/mdatp_onboard.json"
+
+   #Download the installer script from: https://github.com/microsoft/mdatp-xplat/blob/master/linux/installation/mde_installer.sh
+   #Place the same at specific location, edit this if needed
+   mde_installer= "/tmp/mde_installer.sh"
+
+
+   ## Invoke the mde-installer script 
+   bash 'Installing mdatp using mde-installer' do
+       code <<-EOS
+       chmod +x #{mde_installer}
+       #{mde_installer} --install --onboard #{onboarding_json} --use-local-repo
+       EOS
+   end
+   ```
+
+4. Install at custom path: This is optional step of (2) above and it is applied for the ones who want to custom installation path instead of default installation path.   
+   ```bash
+   mdatp = "/etc/opt/microsoft/mdatp"
+
+   #Download the onboarding json from tenant, keep the same at specific location
+   onboarding_json = "/tmp/mdatp_onboard.json"
+
+   #Download the installer script from: https://github.com/microsoft/mdatp-xplat/blob/master/linux/installation/mde_installer.sh
+   #Place the same at specific location, edit this if needed
+   mde_installer= "/tmp/mde_installer.sh"
+
+
+   ## Invoke the mde-installer script 
+   bash 'Installing mdatp using mde-installer' do
+       code <<-EOS
+       chmod +x #{mde_installer}
+       #{mde_installer} --install --onboard #{onboarding_json} --custom-installation-path=\mount\installation_directory\
+       EOS
+   end
+   ```
 > [!NOTE]
 > The installer script also supports other parameters such as channel, realtime protection, version, etc. To select from the list of available options, check help through the following command:
 >```./mde_installer.sh --help```
+> local repo and custom installation path both can be used simultaneously.
 
 ### Create a cookbook by manually configuring repositories
 
